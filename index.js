@@ -40,6 +40,29 @@ async function run() {
             res.send({ success: true, result });
         });
 
+        app.get('/booking', async (req, res) => {
+            const patient = req.query.patient;
+            const query = { patient: patient };
+            const bookings = await bookingCollection.find(query).toArray();
+            res.send(bookings);
+        })
+
+        app.get('/available', async (req, res) => {
+            const date = req.query.date;
+            const treatments = await treatmentCollection.find().toArray();
+            const query = { date: date };
+            const bookings = await bookingCollection.find(query).toArray();
+            treatments.forEach(treatment => {
+                const treatmentBookings = bookings.filter(booking => booking.treatmentName === treatment.name);
+                const booked = treatmentBookings.map(s => s.slot);
+                const available = treatment.slots.filter(s => !booked.includes(s));
+                treatment.slots = available;
+
+
+            })
+            res.send(treatments);
+        })
+
     }
     finally {
         // await client.close();
